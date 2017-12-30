@@ -1,5 +1,19 @@
-# odata-spring-mongodb-filter
+# Spring MongoDB OData $filter
 OData Version 4.0 $filter parser for Spring Data MongoDB
+
+###### Maven
+```xml
+<dependency>
+    <groupId>com.efindi</groupId>
+    <artifactId>smo-filter</artifactId>
+    <version>0.0.1-RELEASE</version>
+</dependency>
+```
+
+###### Gradle
+```groovy
+compile ('com.efindi:smo-filter:0.0.1-RELEASE')
+```
 
 ### Usage
 This will throw an InvalidODataFormatException if the string input is not valid.
