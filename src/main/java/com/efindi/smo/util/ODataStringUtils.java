@@ -32,7 +32,7 @@ public class ODataStringUtils {
 
     public static List<String> filterPatternSplitToList(String $filter) {
         Matcher m = FILTER_PATTERN.matcher($filter);
-        List<String> filterList = new ArrayList();
+        List<String> filterList = new ArrayList<>();
         while (m.find()) {
             filterList.add(m.group(1));
         }

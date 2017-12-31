@@ -26,16 +26,13 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 group 'com.efindi'
-version '0.0.1-SNAPSHOT'
+version '0.0.1' + getReleaseTag()
 String pomName = getName()
 String pomVersion = getVersion()
 String pomGroupId = getGroup()
 String pomRepositoryUrl = 'https://github.com/efindi/odata-spring-mongodb-filter'
 String pomScmUrl = 'https://github.com/efindi/odata-spring-mongodb-filter.git'
 String pomDescription = 'OData Version 4.0 $filter parser for Spring Data MongoDB'
-String pomDeveloperId = getDeveloperProperty('id')
-String pomDeveloperName = getDeveloperProperty('name')
-String pomDeveloperEmail = getDeveloperProperty('email')
 
 repositories {
     mavenCentral()
@@ -109,12 +106,18 @@ def getSonatypeProperty(String name) {
     }
 }
 
-def getDeveloperProperty(String name) {
-    name = 'developer' + name.capitalize()
-    if (project.hasProperty(name)) {
-        return project.getProperties()[name]
-    } else {
-        return ''
+def getReleaseTag() {
+    if (project.hasProperty("release")) {
+        return "-RELEASE"
+    }
+    return "-SNAPSHOT"
+}
+
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
     }
 }
 
@@ -154,9 +157,9 @@ uploadArchives {
 
                 developers {
                     developer {
-                        id pomDeveloperId
-                        name pomDeveloperName
-                        email pomDeveloperEmail
+                        id 'kexsteve'
+                        name 'Hoi Hung Cheng'
+                        email 'kexsteve@efindi.com'
                     }
                 }
             }
