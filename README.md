@@ -1,3 +1,5 @@
+[ ![Codeship Status for efindi/smo-filter](https://app.codeship.com/projects/3ea06960-d010-0135-472a-5eb0b39aaf60/status?branch=master)](https://app.codeship.com/projects/262285)
+
 # Spring MongoDB OData $filter
 OData Version 4.0 $filter parser for Spring Data MongoDB
 

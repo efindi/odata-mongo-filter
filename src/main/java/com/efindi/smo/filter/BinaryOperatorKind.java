@@ -6,36 +6,6 @@ package com.efindi.smo.filter;
  */
 public enum BinaryOperatorKind {
 
-//    /**
-//     * OData has operator used for OData enumerations
-//     */
-//    HAS("has"),
-//
-//    /**
-//     * Multiplication operator
-//     */
-//    MUL("mul"),
-//
-//    /**
-//     * Division operator
-//     */
-//    DIV("div"),
-//
-//    /**
-//     * Modulo operator
-//     */
-//    MOD("mod"),
-//
-//    /**
-//     * Addition operator
-//     */
-//    ADD("add"),
-//
-//    /**
-//     * Subtraction operator
-//     */
-//    SUB("sub"),
-
     /**
      * Greater than operator ("{@literal >}")
      */

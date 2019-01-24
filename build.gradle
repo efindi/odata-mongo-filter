@@ -1,116 +1,29 @@
-import org.apache.commons.lang3.StringUtils
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.apache.commons:commons-lang3:3.7'
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.2'
-    }
+plugins {
+    id "java-library"
+    id "maven-publish"
+    id "signing"
+    id "io.codearte.nexus-staging" version "0.21.2"
+    id "idea"
 }
-
-ext.junit4Version = '4.12'
-ext.junitVintageVersion = '4.12.2'
-ext.junitPlatformVersion = '1.0.2'
-ext.junitJupiterVersion = '5.0.2'
-ext.log4jVersion = '2.9.0'
-
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'idea'
-apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-group 'com.efindi'
-version '0.0.1' + getReleaseTag()
+group "com.efindi"
+version "0.0.3-SNAPSHOT"
 String pomName = getName()
 String pomVersion = getVersion()
 String pomGroupId = getGroup()
-String pomRepositoryUrl = 'https://github.com/efindi/odata-spring-mongodb-filter'
-String pomScmUrl = 'https://github.com/efindi/odata-spring-mongodb-filter.git'
-String pomDescription = 'OData Version 4.0 $filter parser for Spring Data MongoDB'
+String pomRepositoryUrl = "https://github.com/efindi/odata-spring-mongodb-filter"
+String pomScmUrl = "https://github.com/efindi/odata-spring-mongodb-filter.git"
+String pomDescription = "OData V4.01 \$filter for Spring Data MongoDB"
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    compile 'org.springframework.data:spring-data-mongodb:2.0.2.RELEASE'
-
-    compile 'javax.validation:validation-api:2.0.1.Final'
-
-    compile 'org.apache.commons:commons-lang3:3.7'
-    compile 'org.apache.commons:commons-collections4:4.1'
-    compile 'com.google.guava:guava:23.4-jre'
-
-    testCompile('commons-io:commons-io:2.6')
-
-    // JUnit Jupiter API and TestEngine implementation
-    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
-
-    // To avoid compiler warnings about @API annotations in JUnit code
-    testCompileOnly('org.apiguardian:apiguardian-api:1.0.0')
-
-    // To use Log4J's LogManager
-    testRuntime("org.apache.logging.log4j:log4j-core:${log4jVersion}")
-    testRuntime("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
-
-    // Only needed to run tests in an (IntelliJ) IDE(A) that bundles an older version
-    testRuntime("org.junit.platform:junit-platform-launcher:${junitPlatformVersion}")
-}
-
-String[] packageArr = ['com', 'efindi', 'smo']
-jar {
-    manifest {
-        attributes "Name" : StringUtils.join(packageArr, '/').concat('/'),
-                "Specification-Title": 'Spring MongoDB OData Filter',
-                "Specification-Version": "4.0",
-                "Specification-Vendor": pomGroupId,
-                "Implementation-Title": StringUtils.join(packageArr, '.'),
-                "Implementation-Version": pomVersion,
-                "Implementation-Vendor": pomGroupId,
-                'Created-By': System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')',
-                'Built-With': "gradle-${project.getGradle().getGradleVersion()}, groovy-${GroovySystem.getVersion()}"
-    }
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
-signing {
-    sign configurations.archives
-}
-
-def getSonatypeProperty(String name) {
-    name = 'sonatype' + name.capitalize()
-    if (project.hasProperty(name)) {
-        return project.getProperties()[name]
-    } else {
-        return ''
-    }
-}
-
-def getReleaseTag() {
-    if (project.hasProperty("release")) {
-        return "-RELEASE"
-    }
-    return "-SNAPSHOT"
+test {
+    useJUnitPlatform()
 }
 
 allprojects {
@@ -121,48 +34,142 @@ allprojects {
     }
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+dependencies {
+    implementation 'org.springframework.data:spring-data-mongodb:2.2.5.RELEASE'
+    implementation 'javax.validation:validation-api:2.0.1.Final'
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: getSonatypeProperty('username'), password: getSonatypeProperty('password'))
-            }
+    implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'org.apache.commons:commons-lang3:3.9'
 
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: getSonatypeProperty('username'), password: getSonatypeProperty('password'))
-            }
+    testImplementation 'org.projectlombok:lombok:1.18.12'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
+    testImplementation 'ch.qos.logback:logback-core:1.2.3'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'commons-io:commons-io:2.6'
+    testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
+}
 
-            pom.project {
-                name pomName
-                description pomDescription
-                url pomRepositoryUrl
-                version pomVersion
-                groupId pomGroupId
-                artifactId pomName
-                packaging 'jar'
-                scm {
-                    connection pomScmUrl
-                    developerConnection pomScmUrl
-                    url pomScmUrl
+jar {
+    String[] packageArr = ["com", "efindi", "smo", "filter"]
+    from("LICENSE-2.0.txt") {
+        into("META-INF")
+    }
+    manifest {
+        attributes(
+                "Name": String.join("/", packageArr).concat("/"),
+                "Specification-Title": "Spring MongoDB OData Filter",
+                "Specification-Version": "4.01",
+                "Specification-Vendor": pomGroupId,
+                "Implementation-Title": String.join(".", packageArr),
+                "Implementation-Version": pomVersion,
+                "Implementation-Vendor": pomGroupId,
+                "Created-By": System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")",
+                "Built-With": "gradle-${project.getGradle().getGradleVersion()}, groovy-${GroovySystem.getVersion()}"
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+def getSonatypeProperty(String name) {
+    name = "sonatype" + name.capitalize()
+    if (project.hasProperty(name)) {
+        return project.getProperties()[name]
+    } else {
+        return ""
+    }
+}
+
+def getOssrhProperty(String name) {
+    name = String.join(".", "ossrh", name)
+    if (project.hasProperty(name)) {
+        return project.getProperties()[name]
+    } else {
+        return ""
+    }
+}
+
+def getDeveloperProperty(String name) {
+    name = String.join(".", "developer", name)
+    if (project.hasProperty(name)) {
+        return project.getProperties()[name]
+    } else {
+        return ""
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier = "javadoc"
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+//signing {
+//    sign publishing.publications.mavenJava
+//}
+
+publishing {
+    publications {
+        def gitUrl = "https://github.com/efindi/smo-filter"
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionOf("runtimeClasspath")
                 }
-
+                usage("java-runtime") {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = Project.getName()
+                description = "Efindi Batch Commons"
+                url = gitUrl
                 licenses {
                     license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
                     }
                 }
-
                 developers {
                     developer {
-                        id 'kexsteve'
-                        name 'Hoi Hung Cheng'
-                        email 'kexsteve@efindi.com'
+                        id = getDeveloperProperty("id")
+                        name = getDeveloperProperty("name")
+                        email = getDeveloperProperty("email")
                     }
                 }
+                scm {
+                    connection = "scm:git:git@github.com:efindi/batch-commons.git"
+                    developerConnection = "scm:git:ssh://git@github.com:efindi/batch-commons.git"
+                    url = gitUrl
+                }
             }
+        }
+    }
+    repositories {
+        maven {
+            // change URLs to point to your repos, e.g. http://my.org/repo
+            def releasesRepoUrl = "$buildDir/repos/releases"
+            def snapshotsRepoUrl = "$buildDir/repos/snapshots"
+//            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+//            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
+//            credentials(PasswordCredentials) {
+//                username = getOssrhProperty("username")
+//                password = getOssrhProperty("password")
+//            }
         }
     }
 }

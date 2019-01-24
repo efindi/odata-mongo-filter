@@ -4,7 +4,7 @@ import com.efindi.smo.exception.InvalidODataFormatException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.ArrayList;
@@ -29,18 +29,19 @@ import static org.springframework.util.StringUtils.hasText;
  */
 public class Filter {
 
-    private String filter;
-    private Criteria criteria;
-
-    public Filter() {
-    }
+    protected String filter;
+    protected Criteria criteria;
 
     public Filter(String filter) throws InvalidODataFormatException {
         this.filter = filter;
         this.criteria = $filterToCriteria(this.filter);
     }
 
-    public static Criteria $filterToCriteria(String $filter) throws InvalidODataFormatException {
+    public static Filter of(String filter) throws InvalidODataFormatException {
+        return new Filter(filter);
+    }
+
+    protected Criteria $filterToCriteria(String $filter) throws InvalidODataFormatException {
         if (hasText($filter)) {
             ImmutableList<String> $filterList = ImmutableList.copyOf(filterPatternSplitToList($filter));
             if (bridgeIsExclusive(AND.toString(), $filterList)) {
@@ -54,21 +55,21 @@ public class Filter {
         throw new InvalidODataFormatException();
     }
 
-    protected static boolean bridgeIsExclusive(String bridge, List<String> $filterList) {
+    protected boolean bridgeIsExclusive(String bridge, List<String> $filterList) {
         HashSet<String> rest = Sets.newHashSet(EXPRESSION_BRIDGE_SET);
         rest.remove(bridge);
         return $filterList.contains(bridge) && $filterList.stream().filter(p -> rest.contains(p)).collect(toList()).isEmpty();
     }
 
-    protected static List<String> filterExpressionBridgeSet(List<String> $filterList) {
+    protected List<String> filterExpressionBridgeSet(List<String> $filterList) {
         return $filterList.stream().filter(p -> !EXPRESSION_BRIDGE_SET.contains(p)).collect(toList());
     }
 
-    protected static List<Criteria> $filterListToCriteria(List<String> $filterList) {
+    protected List<Criteria> $filterListToCriteria(List<String> $filterList) {
         return generateCriteriaList(generateExpessionList($filterList));
     }
 
-    protected static List<Criteria> generateCriteriaList(List<Expression> expressionList) {
+    protected List<Criteria> generateCriteriaList(List<Expression> expressionList) {
         List<Criteria> criteriaList = new ArrayList<>();
         for (Expression expression : expressionList) {
             criteriaList.add(expressionToCriteria(expression));
@@ -76,7 +77,7 @@ public class Filter {
         return criteriaList.stream().filter(criteria -> nonNull(criteria)).collect(toList());
     }
 
-    protected static Criteria expressionToCriteria(Expression expression) {
+    protected Criteria expressionToCriteria(Expression expression) {
         Criteria criteria;
         switch (expression.getLogicalOperator()) {
             case EQ:
@@ -104,7 +105,7 @@ public class Filter {
         return criteria;
     }
 
-    protected static List<Expression> generateExpessionList(List<String> $filterList) {
+    protected List<Expression> generateExpessionList(List<String> $filterList) {
         List<Expression> expressionList = new ArrayList<>();
         int start = 0, end = 3;
         do {
@@ -116,7 +117,7 @@ public class Filter {
         return expressionList;
     }
 
-    protected static Expression generateExpression(List<String> stringList) {
+    protected Expression generateExpression(List<String> stringList) {
         String value = stringList.get(2);
         Object storedValue;
         if (value.startsWith("datetime")) {
@@ -133,16 +134,15 @@ public class Filter {
         return filter;
     }
 
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
     public Criteria getCriteria() {
         return criteria;
     }
 
-    public void setCriteria(Criteria criteria) {
-        this.criteria = criteria;
+    @Override
+    public String toString() {
+        return new Document()
+                .append("filter", filter)
+                .append("criteria", criteria.getCriteriaObject())
+                .toJson();
     }
-
 }
